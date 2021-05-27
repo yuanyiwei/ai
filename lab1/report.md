@@ -11,41 +11,35 @@ CJKmainfont: "Microsoft YaHei" # for win
 
 ### BFS
 
-BFS 的思路与 DFS 类似。使用容器`Queue`来管理。使用`visited`字典记录访问到的节点和父节点。每次从队列中队首弹出节点，判断是否是目标节点。若是目标节点，则通过 visited 获取到目标节点的路径作为结果返回。如果该节点还未访问过，则将该节点和父节点加入 visited 字典中，该节点为 key,父节点为 value。并将该节点的孩子节点(以及作为父节点的该节点)放入队列。循环上述过程直至队列为空。
+类似 DFS，使用 `Queue` 来存储访问到的路径，`visited` 字典保持访问到的节点。
 
-源代码:
+每次从队列中弹出节点，若是目标节点，则通过 visited 获取到到达目标节点的路径返回；如果该节点还未访问过，则将该节点加入 visited 中。循环上述过程直至队列为空。
 
 ```python
 def myBreadthFirstSearch(problem):
     visited = {}
     queue = util.Queue()
-
     queue.push((problem.getStartState(), None))
-
     while not queue.isEmpty():
         state, prev_state = queue.pop()
-
         if problem.isGoalState(state):
             solution = [state]
             while prev_state != None:
                 solution.append(prev_state)
                 prev_state = visited[prev_state]
             return solution[::-1]
-
         if state not in visited:
             visited[state] = prev_state
-
             for next_state, step_cost in problem.getChildren(state):
                 queue.push((next_state, state))
-
     return []
 ```
+
+TODO:
 
 ### A-star
 
 A\*算法使用优先队列来排序。按照$f(n)=h(n)+g(n)$排序。期中$h$启发式函数，预估到目标点的距离。$g$是到当前节点的 cost。初始时初始节点$g=0，f=h$。在算法实现中，使用一个字典`cost`记录到每个节点的距离（即 g(n)）。初始时字典中只有初始节点,value 是 0.0。在扩展节点时，使用`cost[next_state] = cost[state] + step_cost`记录该路径上下个子节点的 cost。循环方式与 BFS 类型。每次从优先队列弹出第一个元素。判断是否是目标节点，若是则通过 visited 找到路径并返回。之后判断是否在 visited 中。若不在，则获取其所有子节点，并得到到子节点的 cost，之后将子节点压入优先队列。循环上述过程，直至优先队列为空。
-
-源代码:
 
 ```python
 def myAStarSearch(problem, heuristic):
@@ -54,25 +48,21 @@ def myAStarSearch(problem, heuristic):
     pq = util.PriorityQueue()
     st = problem.getStartState()
     cost[st] = 0.0
-    pq.push((st,None),heuristic(st))
-
+    pq.push((st, None), heuristic(st))
     while not pq.isEmpty():
-        state,prev_state = pq.pop()
-
+        state, prev_state = pq.pop()
         if problem.isGoalState(state):
             solution = [state]
             while prev_state != None:
                 solution.append(prev_state)
                 prev_state = visited[prev_state]
             return solution[::-1]
-
         if state not in visited:
             visited[state] = prev_state
-
-            for next_state,step_cost in problem.getChildren(state):
+            for next_state, step_cost in problem.getChildren(state):
                 cost[next_state] = cost[state] + step_cost
-                pq.push((next_state, state),heuristic(next_state)+cost[next_state])
-
+                pq.push((next_state, state), heuristic(
+                    next_state)+cost[next_state])
     return []
 ```
 
@@ -83,58 +73,7 @@ def myAStarSearch(problem, heuristic):
 源代码:
 
 ```python
-    def minimax(self, state, depth):
-        if state.isTerminated():
-            return None, state.evaluateScore()
-        if state.isMe():
-            best_state,best_score = self.maxval(state,0)
-            return best_state,best_score
-        else:
-            best_state,best_score = self.minval(state,0)
-            return best_state,best_score
-
-    def maxval(self,state,depth):
-        if state.isTerminated():
-            return None,state.evaluateScore()
-
-        if depth >= self.depth:
-            return state,state.evaluateScore()
-
-        best_state,best_score = None,-float('inf')
-
-        for child in state.getChildren():
-            if child.isMe():
-                _,score = self.maxval(child,depth+1)
-                if score > best_score:
-                    best_state = child
-                    best_score = score
-            else:
-                _,score = self.minval(child,depth)
-                if score > best_score:
-                    best_state = child
-                    best_score = score
-
-        return best_state,best_score
-
-    def minval(self,state,depth):
-        if state.isTerminated():
-            return None,state.evaluateScore()
-
-        best_state,best_score = None,float('inf')
-
-        for child in state.getChildren():
-            if child.isMe():
-                _,score = self.maxval(child,depth+1)
-                if score < best_score:
-                    best_state = child
-                    best_score = score
-            else:
-                _,score = self.minval(child,depth)
-                if score < best_score:
-                    best_state = child
-                    best_score = score
-
-        return best_state,best_score
+def minimax(self, state, depth):
 ```
 
 ### Alpha-beta pruning
@@ -144,90 +83,12 @@ alpha-beta 剪枝与 Minimax 类似，新增三个函数`maxval`、`minval`和`a
 源代码:
 
 ```python
-class MyAlphaBetaAgent():
-
-    def __init__(self, depth):
-        self.depth = depth
-
-    def alphabeta(self,state,depth):
-        if state.isTerminated():
-            return None, state.evaluateScore()
-
-        if state.isMe():
-            best_state,best_score = self.maxval(state,0,-float('inf'),float('inf'))
-            return best_state,best_score
-        else:
-            best_state,best_score = self.minval(state,0,-float('inf'),float('inf'))
-            return best_state,best_score
-
-
-    def maxval(self,state,depth,a,b):
-        if state.isTerminated():
-            return None,state.evaluateScore()
-
-        if depth >= self.depth:
-            return state,state.evaluateScore()
-
-        best_state,best_score = None,-float('inf')
-        for child in state.getChildren():
-            if child.isMe():
-                _,score = self.maxval(child,depth+1,a,b)
-                if score > best_score:
-                    best_score = score
-                    best_state = child
-                if best_score > b:
-                    return best_state,best_score
-                a = max(a,best_score)
-            else:
-                _,score = self.minval(child,depth,a,b)
-                if score > best_score:
-                    best_score = score
-                    best_state = child
-                if best_score > b:
-                    return best_state,best_score
-                a = max(a,best_score)
-
-        return best_state,best_score
-
-    def minval(self,state,depth,a,b):
-        if state.isTerminated():
-            return None,state.evaluateScore()
-
-        best_state,best_score = None,float('inf')
-        for child in state.getChildren():
-            if child.isMe():
-                _,score = self.maxval(child,depth+1,a,b)
-                if score < best_score:
-                    best_score = score
-                    best_state = child
-                if best_score < a:
-                    return best_state,best_score
-                b = min(b,best_score)
-            else:
-                _,score = self.minval(child,depth,a,b)
-                if score < best_score:
-                    best_score = score
-                    best_state = child
-                if best_score < a:
-                    return best_state,best_score
-                b = min(b,best_score)
-
-        return best_state,best_score
-
-    def getNextState(self, state):
-        best_state, _ = self.alphabeta(state,self.depth)
-        return best_state
+def alphabeta(self,state,depth):
 ```
 
 ## 实验过程
 
-实验环境:
-
-```shell
-操作系统: Linux arch 5.12.3-arch1-1 #1 SMP PREEMPT Wed, 12 May 2021 17:54:18 +0000 x86_64 GNU/Linux
-工具: anaconda 4.10.1
-python环境: Python 3.6.13
-```
+实验环境：Python 3.7.3、Kernel 4.19.181-1、Debian 10 (buster)
 
 根据文档要求和要实现的算法填充要实现的四个函数。根据未 PASS 的 case 信息 DEBUG。
 实验过程中出现的 bug：
@@ -238,13 +99,20 @@ python环境: Python 3.6.13
 
 ## 结果分析
 
-每次测试时将标准输出定向到文件`result.txt`，标准错误定向到文件`err.txt`中方便测试后查看
+每次测试时运行 `bash test.sh`，test.sh 中为三个 search 和两个 agent 的策略
 
 ```shell
-$ ./test.sh 2> err.txt 1>result.txt
+python3 search/autograder.py -q q1
+python3 search/pacman.py -l mediumMaze -p SearchAgent --frameTime 0
+python3 search/autograder.py -q q2
+python3 search/pacman.py -l mediumMaze -p SearchAgent -a fn=bfs --frameTime 0
+python3 search/autograder.py -q q3
+python3 search/pacman.py -l mediumMaze -p SearchAgent -a fn=astar,heuristic=manhattanHeuristic --frameTime 0
+python3 multiagent/autograder.py -q q2
+python3 multiagent/autograder.py -q q3
+python3 multiagent/pacman.py -p AlphaBetaAgent -l mediumClassic --frameTime 0
 ```
 
-最后`err.txt`为空，`result.txt`中所有 case 通过。
-`result.txt`中部分结果:
+所有 case 通过，尽管 agent 时会失败
 
-![](./media/1.png)
+![ai1](assets/ai1.png)
