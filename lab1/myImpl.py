@@ -31,6 +31,8 @@ step_cost), where 'next_state' is a child to the current state,
 and 'step_cost' is the incremental cost of expanding to that child.
 
 """
+
+
 def myDepthFirstSearch(problem):
     visited = {}
     frontier = util.Stack()
@@ -39,7 +41,6 @@ def myDepthFirstSearch(problem):
 
     while not frontier.isEmpty():
         state, prev_state = frontier.pop()
-
         if problem.isGoalState(state):
             solution = [state]
             while prev_state != None:
@@ -51,6 +52,7 @@ def myDepthFirstSearch(problem):
             for next_state, step_cost in problem.getChildren(state):
                 frontier.push((next_state, state))
     return []
+
 
 def myBreadthFirstSearch(problem):
     # YOUR CODE HERE
@@ -72,6 +74,7 @@ def myBreadthFirstSearch(problem):
                 queue.push((next_state, state))
     return []
 
+
 def myAStarSearch(problem, heuristic):
     # YOUR CODE HERE
     visited = {}
@@ -91,10 +94,12 @@ def myAStarSearch(problem, heuristic):
             return solution[::-1]
         if state not in visited:
             visited[state] = prev_state
-            for next_state,step_cost in problem.getChildren(state):
+            for next_state, step_cost in problem.getChildren(state):
                 cost[next_state] = cost[state] + step_cost
-                pq.push((next_state, state),heuristic(next_state)+cost[next_state])
+                pq.push((next_state, state), heuristic(
+                    next_state)+cost[next_state])
     return []
+
 
 """
 Game state has 4 methods we can use.
@@ -112,6 +117,8 @@ state.evaluateScore()
 Return the score of the state. We should maximum the score for the desired agent.
 
 """
+
+
 class MyMinimaxAgent():
 
     def __init__(self, depth):
@@ -120,24 +127,116 @@ class MyMinimaxAgent():
     def minimax(self, state, depth):
         if state.isTerminated():
             return None, state.evaluateScore()
-
-        best_state, best_score = None, -float('inf') if state.isMe() else float('inf')
-
+        best_state = None
+        if state.isMe():
+            best_score = - float('inf')
+        else:
+            best_score = float('inf')
+        if state.isMe():
+            print('Me depth:', depth)
+            if depth == 0:
+                return state, state.evaluateScore()
         for child in state.getChildren():
             # YOUR CODE HERE
-            util.raiseNotDefined()
-
+            if state.isMe():
+                child_state, child_score = self.minimax(child, depth-1)
+                if child_score > best_score:
+                    best_score = child_score
+                    best_state = child
+            else:
+                child_state, child_score = self.minimax(child, depth)
+                if child_score < best_score:
+                    best_score = child_score
+                    best_state = child
         return best_state, best_score
 
     def getNextState(self, state):
         best_state, _ = self.minimax(state, self.depth)
         return best_state
 
+# TODO:
+
+# class MyAlphaBetaAgent():
+
+#     def __init__(self, depth):
+#         self.depth = depth
+
+#     def getNextState(self, state):
+#         # YOUR CODE HERE
+#         util.raiseNotDefined()
+
+
 class MyAlphaBetaAgent():
 
     def __init__(self, depth):
         self.depth = depth
 
+    def alphabeta(self, state, depth):
+        if state.isTerminated():
+            return None, state.evaluateScore()
+
+        if state.isMe():
+            best_state, best_score = self.maxval(
+                state, 0, -float('inf'), float('inf'))
+            return best_state, best_score
+        else:
+            best_state, best_score = self.minval(
+                state, 0, -float('inf'), float('inf'))
+            return best_state, best_score
+
+    def maxval(self, state, depth, a, b):
+        if state.isTerminated():
+            return None, state.evaluateScore()
+
+        if depth >= self.depth:
+            return state, state.evaluateScore()
+
+        best_state, best_score = None, -float('inf')
+        for child in state.getChildren():
+            if child.isMe():
+                _, score = self.maxval(child, depth+1, a, b)
+                if score > best_score:
+                    best_score = score
+                    best_state = child
+                if best_score > b:
+                    return best_state, best_score
+                a = max(a, best_score)
+            else:
+                _, score = self.minval(child, depth, a, b)
+                if score > best_score:
+                    best_score = score
+                    best_state = child
+                if best_score > b:
+                    return best_state, best_score
+                a = max(a, best_score)
+
+        return best_state, best_score
+
+    def minval(self, state, depth, a, b):
+        if state.isTerminated():
+            return None, state.evaluateScore()
+
+        best_state, best_score = None, float('inf')
+        for child in state.getChildren():
+            if child.isMe():
+                _, score = self.maxval(child, depth+1, a, b)
+                if score < best_score:
+                    best_score = score
+                    best_state = child
+                if best_score < a:
+                    return best_state, best_score
+                b = min(b, best_score)
+            else:
+                _, score = self.minval(child, depth, a, b)
+                if score < best_score:
+                    best_score = score
+                    best_state = child
+                if best_score < a:
+                    return best_state, best_score
+                b = min(b, best_score)
+
+        return best_state, best_score
+
     def getNextState(self, state):
-        # YOUR CODE HERE
-        util.raiseNotDefined()
+        best_state, _ = self.alphabeta(state, self.depth)
+        return best_state
