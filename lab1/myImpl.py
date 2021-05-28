@@ -36,7 +36,6 @@ and 'step_cost' is the incremental cost of expanding to that child.
 def myDepthFirstSearch(problem):
     visited = {}
     frontier = util.Stack()
-
     frontier.push((problem.getStartState(), None))
 
     while not frontier.isEmpty():
@@ -79,13 +78,12 @@ def myAStarSearch(problem, heuristic):
     # YOUR CODE HERE
     visited = {}
     cost = {}
-    pq = util.PriorityQueue()
-    st = problem.getStartState()
-    cost[st] = 0.0
-    pq.push((st, None), heuristic(st))
+    pqueue = util.PriorityQueue()
+    cost[problem.getStartState()] = 0.0 # start
+    pqueue.push((problem.getStartState(), None), heuristic(problem.getStartState()))
 
-    while not pq.isEmpty():
-        state, prev_state = pq.pop()
+    while not pqueue.isEmpty():
+        state, prev_state = pqueue.pop()
         if problem.isGoalState(state):
             solution = [state]
             while prev_state != None:
@@ -96,7 +94,7 @@ def myAStarSearch(problem, heuristic):
             visited[state] = prev_state
             for next_state, step_cost in problem.getChildren(state):
                 cost[next_state] = cost[state] + step_cost
-                pq.push((next_state, state), heuristic(
+                pqueue.push((next_state, state), heuristic(
                     next_state)+cost[next_state])
     return []
 
