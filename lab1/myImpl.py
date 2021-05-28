@@ -131,9 +131,10 @@ class MyMinimaxAgent():
         else:
             best_score = float('inf')
         if state.isMe():
-            print('Me depth:', depth)
+            # print('Me depth:', depth)
             if depth == 0:
                 return state, state.evaluateScore()
+
         for child in state.getChildren():
             # YOUR CODE HERE
             if state.isMe():
@@ -168,11 +169,12 @@ class MyAlphaBetaAgent():
         else:
             best_score = float('inf')
         if state.isMe():
-            print('Me depth:', depth)
+            # print('Me depth:', depth)
             if depth == 0:
                 return state, state.evaluateScore()
-        if state.isMe():
-            for child in state.getChildren():
+
+        for child in state.getChildren():
+            if state.isMe():
                 child_state, child_score = self.alphaBeta(
                     child, depth, alpha, beta)
                 if child_score > best_score:
@@ -181,8 +183,7 @@ class MyAlphaBetaAgent():
                 if best_score > beta:
                     return best_state, best_score
                 alpha = max(alpha, best_score)
-        else:
-            for child in state.getChildren():
+            else:
                 if child.isMe():
                     child_state, child_score = self.alphaBeta(
                         child, depth-1, alpha, beta)

@@ -1,9 +1,9 @@
 ---
-# documentclass: ctexart # for linux
+documentclass: ctexart # for linux
 title: 人工智能实验一
 author: PB18000221 袁一玮
 # date: 5 月 11 日
-CJKmainfont: "Microsoft YaHei" # for win
+# CJKmainfont: "Microsoft YaHei" # for win
 # CJKmainfont: "KaiTi" # for win
 ---
 
@@ -70,24 +70,82 @@ def myAStarSearch(problem, heuristic):
     return []
 ```
 
-TODO:
-
 ### Minimax
-
-源代码:
 
 ```python
 def minimax(self, state, depth):
+    if state.isTerminated():
+        return None, state.evaluateScore()
+
+    best_state = None
+    if state.isMe():
+        best_score = -float('inf')
+    else:
+        best_score = float('inf')
+    if state.isMe():
+        # print('Me depth:', depth)
+        if depth == 0:
+            return state, state.evaluateScore()
+
+    for child in state.getChildren():
+        if state.isMe():
+            child_state, child_score = self.minimax(child, depth-1)
+            if child_score > best_score:
+                best_score = child_score
+                best_state = child
+        else:
+            child_state, child_score = self.minimax(child, depth)
+            if child_score < best_score:
+                best_score = child_score
+                best_state = child
+    return best_state, best_score
 ```
 
-### Alpha-beta pruning
+### Alpha-beta 剪枝
 
-alpha-beta 剪枝与 Minimax 类似。在遍历的过程中,如果发现 max 节点当前找到的子节点的最大值大于 beta 时，遍历子节点无意义；同理，如果发现 min 节点当前找到的子节点最小值小于 alpha，也可以剪枝。
+alpha-beta 剪枝与 Minimax 类似。在遍历决策树时，如果发现我方 Agent 找到的子节点的最大值大于 beta 时，遍历子节点无意义；同理，如果发现对方 Agent 找到的子节点最小值小于 alpha，也可以进行剪枝。
 
-源代码:
+书上算法有坑，判断当前最大(小)值和 beta(alpha) 的关系时不要用 >=(<=) 而是要用 >(<)，否则可能会错误剪枝。
 
 ```python
-def alphabeta(self,state,depth):
+def alphaBeta(self, state, depth, alpha, beta):
+    if state.isTerminated():
+        return None, state.evaluateScore()
+
+    best_state = None
+    if state.isMe():
+        best_score = -float('inf')
+    else:
+        best_score = float('inf')
+    if state.isMe():
+        # print('Me depth:', depth)
+        if depth == 0:
+            return state, state.evaluateScore()
+
+    for child in state.getChildren():
+        if state.isMe():
+            child_state, child_score = self.alphaBeta(
+                child, depth, alpha, beta)
+            if child_score > best_score:
+                best_score = child_score
+                best_state = child
+            if best_score > beta:
+                return best_state, best_score
+            alpha = max(alpha, best_score)
+        else:
+            if child.isMe():
+                child_state, child_score = self.alphaBeta(
+                    child, depth-1, alpha, beta)
+            else:
+                child_state, child_score = self.alphaBeta(
+                    child, depth, alpha, beta)
+            if child_score < best_score:
+                best_score = child_score
+                best_state = child
+            if best_score < alpha:
+                return best_state, best_score
+            beta = min(beta, best_score)
+    return best_state, best_score
 ```
 
 ## 实验结果
@@ -106,10 +164,8 @@ python3 multiagent/autograder.py -q q3
 python3 multiagent/pacman.py -p AlphaBetaAgent -l mediumClassic --frameTime 0
 ```
 
-所有 case 通过，尽管 agent 时会失败
+所有 case 通过，尽管 agent 在最后一个测试时会失败
 
-![ai1](assets/ai1.png)
+![ai-test1](assets/ai1.png)
 
-一些坑：
-
-1. alpha-beta 剪枝中判断当前最大(小)值和 beta(alpha) 的关系时不要用 >=(<=) 而是要用 >(<)。
+![ai-test2](assets/ai2.png)
