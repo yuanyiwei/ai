@@ -1,3 +1,5 @@
+from random import random
+
 from process_data import load_and_process_data
 from evaluation import get_macro_F1, get_micro_F1, get_acc
 import numpy as np
@@ -11,11 +13,11 @@ class LinearClassification:
     epochs: 更新迭代的次数
     '''
 
-    def __init__(self, lr=0.05, Lambda=0.001, epochs=1000, w=0):
+    def __init__(self, lr=0.05, Lambda=0.001, epochs=1000):
         self.lr = lr
         self.Lambda = Lambda
         self.epochs = epochs
-        self.w = w
+        self.w = 0
 
     '''
     根据训练数据train_features,train_labels计算梯度更新参数W
@@ -26,20 +28,15 @@ class LinearClassification:
         需要你实现的部分
         '''
         attachment = np.ones(train_features.shape[0])
-        print("train_features.shape:", train_features.shape)
         x = np.c_[attachment, train_features]
-        print("x:", x)
-        w = np.zeros(train_features.shape[1] + 1).reshape(-1, 1)
+        w = np.zeros(train_features.shape[1] + 1).reshape(-1, 1) + random()
 
         for i in range(self.epochs):
             temp = np.dot(x, w)
             temp = temp - train_labels
             temp = np.dot(temp.reshape(temp.shape[1], temp.shape[0]), x)
             grad = 2 * temp + 2 * self.Lambda * w.reshape(1, -1)
-            # print(grad)
-            # 计算梯度
             w = w - self.lr * grad.reshape(-1, 1)
-        # print(w)
         self.w = w
 
     '''
@@ -57,7 +54,6 @@ class LinearClassification:
         pred = []
         for i in range(test_num):
             y_pred = np.dot(X[i], self.w)
-            # print(y_pred.shape,X[i].shape,self.w.shape)
             if y_pred < 1.5:
                 pred.append(1)
             elif y_pred > 2.5:

@@ -34,8 +34,8 @@ class NaiveBayes:
             2:建立subset array with a certain category and a certain feature
             3:for discrete feature[0],我们应该统计pxc
         '''
-        num_c = {1: 0, 2: 0, 3: 0}
-        num_c_feature = {(1, 1): 0, (1, 2): 0, (1, 3): 0, (2, 1): 0, (2, 2): 0, (2, 3): 0, (3, 1): 0, (3, 2): 0,
+        categ = {1: 0, 2: 0, 3: 0}
+        feature_categ = {(1, 1): 0, (1, 2): 0, (1, 3): 0, (2, 1): 0, (2, 2): 0, (2, 3): 0, (3, 1): 0, (3, 2): 0,
                          (3, 3): 0}
         subset_array_dict = {}
         subset_array_cnt = {}
@@ -43,9 +43,9 @@ class NaiveBayes:
             for j in range(1, 8):
                 subset_array_cnt[(i, j)] = 0
         for i in range(traindata.shape[0]):
-            num_c[int(trainlabel[i])] += 1
+            categ[int(trainlabel[i])] += 1
             # 更新相应种类训练数据数量数
-            num_c_feature[(int(trainlabel[i]), int(traindata[i][0]))] += 1
+            feature_categ[(int(trainlabel[i]), int(traindata[i][0]))] += 1
             # 为离散特征feature0和不同种类统计训练数据数量
 
             for j in range(1, 8):
@@ -57,16 +57,16 @@ class NaiveBayes:
                     subset_array_dict[(int(trainlabel[i]), j)] = np.append(subset_array_dict[(int(trainlabel[i]), j)],
                                                                            float(traindata[i][j]))
 
-        # 计算PC
+        # PC
         for i in range(1, 4):
-            self.Pc[i] = (num_c[i] + 1) / (num_c[1] + num_c[2] + num_c[3] + 3)
+            self.Pc[i] = (categ[i] + 1) / (categ[1] + categ[2] + categ[3] + 3)
         # 计算Px[0]c
         for i in range(1, 4):
             for j in range(0, 8):
                 if j == 0:
                     # 离散条件概率
                     for k in range(1, 4):
-                        self.Pxc[(i, j, k)] = (num_c_feature[i, k] + 1) / (num_c[i] + 3)
+                        self.Pxc[(i, j, k)] = (feature_categ[i, k] + 1) / (categ[i] + 3)
                 else:
                     # 连续条件概率
                     self.Pxc[(i, j)] = self.mean_and_standard_deviation(subset_array_dict[(i, j)])
@@ -113,7 +113,7 @@ class NaiveBayes:
                     temp *= p
                 '''
                 probabilities.append(temp)
-            c_predict = np.argmax(probabilities)
+                c_predict = np.argmax(probabilities)
                 '''
 
                 if temp > max:
