@@ -26,24 +26,15 @@ class LinearClassification:
         需要你实现的部分
         '''
         attachment = np.ones(train_features.shape[0])
-        print(attachment.shape, train_features.shape)
-        X = np.c_[attachment, train_features]
+        print("train_features.shape:", train_features.shape)
+        x = np.c_[attachment, train_features]
+        print("x:", x)
         w = np.zeros(train_features.shape[1] + 1).reshape(-1, 1)
-        print(w)
-        # w的初值为0
 
-        fit_epochs = self.epochs
-        while fit_epochs > 0:
-            # print(w)
-            # print(self.loss(train_features,train_labels,w))
-            fit_epochs = fit_epochs - 1
-            # temp = X*w-train_labels
-            # print(X)
-            temp = np.dot(X, w)
+        for i in range(self.epochs):
+            temp = np.dot(x, w)
             temp = temp - train_labels
-            # print(temp)
-            temp = np.dot(temp.reshape(temp.shape[1], temp.shape[0]), X)
-            # print(temp)
+            temp = np.dot(temp.reshape(temp.shape[1], temp.shape[0]), x)
             grad = 2 * temp + 2 * self.Lambda * w.reshape(1, -1)
             # print(grad)
             # 计算梯度
@@ -63,9 +54,8 @@ class LinearClassification:
         test_num = test_features.shape[0]
         attachment = np.ones(test_features.shape[0])
         X = np.c_[attachment, test_features]
-        i = 0
         pred = []
-        while i < test_num:
+        for i in range(test_num):
             y_pred = np.dot(X[i], self.w)
             # print(y_pred.shape,X[i].shape,self.w.shape)
             if y_pred < 1.5:
@@ -74,7 +64,6 @@ class LinearClassification:
                 pred.append(3)
             else:
                 pred.append(2)
-            i = i + 1
         pred = np.array(pred).reshape(test_num, 1)
         return pred
 
@@ -82,15 +71,26 @@ class LinearClassification:
 def main():
     # 加载训练集和测试集
     train_data, train_label, test_data, test_label = load_and_process_data()
-    print(type(train_data), train_data)
-    print(type(train_label), train_label)
 
-    lR = LinearClassification()
+    lR = LinearClassification(lr=0.000005)
     lR.fit(train_data, train_label)  # 训练模型
     pred = lR.predict(test_data)  # 得到测试集上的预测结果
 
     # 计算准确率Acc及多分类的F1-score
     print("Acc: " + str(get_acc(test_label, pred)))
+    # todo: err F1
+    '''
+    Acc: 0.612410986775178
+    TP: 106 17 112
+    0.6217008797653959
+    TP: 288 288 89
+    0.6044071353620146
+    TP: 208 76 180
+    0.6190476190476191
+    macro-F1: 0.6150518780583432
+    TP: 602 381 381
+    micro-F1: 0.612410986775178
+    '''
     print("macro-F1: " + str(get_macro_F1(test_label, pred)))
     print("micro-F1: " + str(get_micro_F1(test_label, pred)))
 
