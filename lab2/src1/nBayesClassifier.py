@@ -4,19 +4,8 @@ from collections import Counter
 from process_data import load_and_process_data
 from evaluation import get_micro_F1, get_macro_F1, get_acc
 
-
-def norm_distribution_function(mean, s_d, x):
-    temp = ((2 * math.pi) ** 0.5) * s_d
-    temp = 1 / temp
-    exp = math.exp(-0.5 * ((x - mean) ** 2) / (s_d ** 2))
-    temp = temp * exp
-    return temp
-
-
-def mean_and_standard_deviation(data_subset):
-    mean = np.average(data_subset)
-    s_d = np.sqrt(np.var(data_subset))
-    return (mean, s_d)
+ran13 = list(range(1, 4))
+ran17 = list(range(1, 8))
 
 
 class NaiveBayes:
@@ -43,8 +32,6 @@ class NaiveBayes:
             2:建立subset array with a certain category and a certain feature
             3:for discrete feature[0],我们应该统计pxc
         '''
-        ran13 = list(range(1, 4))
-        ran17 = list(range(1, 8))
         categ_l = {}  # label
         feature_l = {}  # (label, data[0])
         subset_dict = {}
@@ -56,9 +43,7 @@ class NaiveBayes:
 
         for line in range(traindata.shape[0]):
             categ_l[int(trainlabel[line])] += 1
-            # 更新相应种类训练数据数量数
             feature_l[(int(trainlabel[line]), int(traindata[line][0]))] += 1
-            # 为离散特征feature0和不同种类统计训练数据数量
 
             for j in ran17:
                 if (int(trainlabel[line]), j) not in subset_flag:
@@ -68,58 +53,38 @@ class NaiveBayes:
                     subset_dict[(int(trainlabel[line]), j)] = np.append(
                         subset_dict[(int(trainlabel[line]), j)],
                         float(traindata[line][j]))
-    # todo: save
-    # PC
         for i in ran13:
             self.Pc[i] = (categ_l[i] + 1) / (categ_l[1] + categ_l[2] + categ_l[3] + 3)
-        # 计算Px[0]c
         for i in ran13:
             for j in range(8):
                 if featuretype[j] == 0:
                     for k in ran13:
                         self.Pxc[(i, j, k)] = (feature_l[i, k] + 1) / (categ_l[i] + 3)
                 elif featuretype[j] == 1:
-                    self.Pxc[(i, j)] = mean_and_standard_deviation(subset_dict[(i, j)])
-
-    '''
-    通过一个数据子集去计算均值和标准差
-    data_subset是一个数组（array）类型数据
-    '''
-
-    '''
-    根据先验概率分布p(c)和条件概率分布p(x|c)对新样本进行预测
-    返回预测结果,预测结果的数据类型应为np数组，shape=(test_num,1) test_num为测试数据的数目
-    feature_type为0-1数组，表示特征的数据类型，0表示离散型，1表示连续型
-    '''
+                    self.Pxc[(i, j)] = (np.average(subset_dict[(i, j)]), np.sqrt(np.var(subset_dict[(i, j)])))
+                else:
+                    print("err featuretype")
 
     def predict(self, features, featuretype):
         '''
         需要你实现的部分
         '''
-        pred = []
-        test_num = features.shape[0]
-        for k in range(test_num):
+        pre_out = []
+        for line in range(features.shape[0]):
             max = 0
-            c_predict = 0
-            probabilities = []
-            for c in range(1, 4):
-                temp = self.Pc[c]
-                temp *= self.Pxc[(c, 0, int(features[k][0]))]
-                for i in range(1, 8):
-                    (mean, s_d) = self.Pxc[(c, i)]
-                    p = norm_distribution_function(mean, s_d, features[k][i])
-                    temp *= p
-                '''
-                probabilities.append(temp)
-                c_predict = np.argmax(probabilities)
-                '''
+            pre = 0
+            for c in ran13:
+                bayes_p = self.Pxc[(c, 0, int(features[line][0]))] * self.Pc[c]
+                for i in ran17:
+                    mean, sigma = self.Pxc[(c, i)]
+                    bayes_p *= math.exp(-0.5 * ((features[line][i] - mean) / sigma) ** 2) / (
+                            ((2 * math.pi) ** 0.5) * sigma)
+                if bayes_p > max:
+                    max = bayes_p
+                    pre = c
 
-                if temp > max:
-                    max = temp
-                    c_predict = c
-
-            pred.append(c_predict)
-        pred = np.array(pred).reshape(test_num, 1)
+            pre_out.append(pre)
+        pred = np.array(pre_out).reshape(-1, 1)
         return pred
 
 
