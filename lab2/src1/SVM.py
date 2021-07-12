@@ -106,7 +106,6 @@ class SupportVectorMachine:
                 [train_label[i] * alpha[i] * self.KERNEL(test_data[j], train_data[i], self.kernel) for i in indices])
             predictions.append(prediction)
         prediction = np.array(predictions).reshape(test_num, 1)
-        # print(prediction)
         return prediction
 
 

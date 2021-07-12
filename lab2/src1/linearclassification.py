@@ -27,15 +27,13 @@ class LinearClassification:
         ''''
         需要你实现的部分
         '''
-        attachment = np.ones(train_features.shape[0])
-        x = np.c_[attachment, train_features]
+        x = np.c_[np.ones(train_features.shape[0]), train_features]
         w = np.zeros(train_features.shape[1] + 1).reshape(-1, 1) + random()
 
         for i in range(self.epochs):
-            temp = np.dot(x, w)
-            temp = temp - train_labels
-            temp = np.dot(temp.reshape(temp.shape[1], temp.shape[0]), x)
-            grad = 2 * temp + 2 * self.Lambda * w.reshape(1, -1)
+            xw_y = np.dot(x, w) - train_labels
+            xw_y = np.dot(xw_y.T, x)
+            grad = 2 * xw_y + 2 * self.Lambda * w.reshape(1, -1)
             w = w - self.lr * grad.reshape(-1, 1)
         self.w = w
 
@@ -48,45 +46,29 @@ class LinearClassification:
         ''''
         需要你实现的部分
         '''
-        test_num = test_features.shape[0]
-        attachment = np.ones(test_features.shape[0])
-        X = np.c_[attachment, test_features]
-        pred = []
-        for i in range(test_num):
-            y_pred = np.dot(X[i], self.w)
-            if y_pred < 1.5:
-                pred.append(1)
-            elif y_pred > 2.5:
-                pred.append(3)
+        x = np.c_[np.ones(test_features.shape[0]), test_features]
+        pre_out = []
+        for i in range(test_features.shape[0]):
+            pre = np.dot(x[i], self.w)
+            if pre < 1.5:
+                pre_out.append(1)
+            elif pre < 2.5:
+                pre_out.append(2)
             else:
-                pred.append(2)
-        pred = np.array(pred).reshape(test_num, 1)
-        return pred
+                pre_out.append(3)
+        pre_out = np.array(pre_out).reshape(-1, 1)
+        return pre_out
 
 
 def main():
     # 加载训练集和测试集
     train_data, train_label, test_data, test_label = load_and_process_data()
-
     lR = LinearClassification(lr=0.000005)
     lR.fit(train_data, train_label)  # 训练模型
     pred = lR.predict(test_data)  # 得到测试集上的预测结果
 
     # 计算准确率Acc及多分类的F1-score
     print("Acc: " + str(get_acc(test_label, pred)))
-    # todo: err F1
-    '''
-    Acc: 0.612410986775178
-    TP: 106 17 112
-    0.6217008797653959
-    TP: 288 288 89
-    0.6044071353620146
-    TP: 208 76 180
-    0.6190476190476191
-    macro-F1: 0.6150518780583432
-    TP: 602 381 381
-    micro-F1: 0.612410986775178
-    '''
     print("macro-F1: " + str(get_macro_F1(test_label, pred)))
     print("micro-F1: " + str(get_micro_F1(test_label, pred)))
 
