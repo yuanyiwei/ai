@@ -60,22 +60,20 @@ class SupportVectorMachine:
             for j in range(train_samples):
                 p[i][j] = self.KERNEL(train_data[i], train_data[j], self.kernel) * train_label[i] * train_label[j]
 
-        q = - np.ones((train_samples, 1)).astype(np.double)
+        q = - np.ones([train_samples, 1]).astype(np.double)
 
-        G1 = np.eye(train_samples, dtype=int)
-        G2 = - np.eye(train_samples, dtype=int)
+        G1 = np.eye(train_samples)
+        G2 = - np.eye(train_samples)
         G = np.r_[G1, G2].astype(np.double)
 
-        h1 = np.zeros((train_samples, 1))
+        h1 = np.zeros([train_samples, 1])
+        h2 = np.zeros([train_samples, 1])
         h1[:] = self.C
-        # for i in range(train_samples):
-        #     h1[i] = self.C
-        h2 = np.zeros((train_samples, 1))
         h = np.r_[h1, h2].astype(np.double)
 
         A = train_label.reshape(1, -1).astype(np.double)
 
-        b = np.zeros((1, 1)).astype(np.double)
+        b = np.zeros([1, 1]).astype(np.double)
 
         p_m = cvxopt.matrix(p)
         q_m = cvxopt.matrix(q)
@@ -84,7 +82,6 @@ class SupportVectorMachine:
         A_m = cvxopt.matrix(A)
         b_m = cvxopt.matrix(b)
         sol = cvxopt.solvers.qp(p_m, q_m, G_m, h_m, A_m, b_m)
-
         alpha = np.array(sol['x'])
 
         print("alpha:", alpha)
