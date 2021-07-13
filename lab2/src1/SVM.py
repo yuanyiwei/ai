@@ -53,60 +53,57 @@ class SupportVectorMachine:
         '''
         需要你实现的部分
         '''
-        train_num = train_data.shape[0]
-        P = np.zeros((train_num, train_num))
-        temp = train_data
-        for i in range(train_num):
-            for j in range(train_num):
-                P[i][j] = self.KERNEL(temp[i], temp[j], self.kernel) * train_label[i] * train_label[j]
-        # q
-        q = - np.ones((train_num, 1))
-        # G
-        G1 = np.eye(train_num, dtype=int)
-        G2 = - np.eye(train_num, dtype=int)
-        G = np.r_[G1, G2]
-        # h
-        h1 = np.zeros((train_num, 1))
-        for i in range(train_num):
-            h1[i] = self.C
-        h2 = np.zeros((train_num, 1))
-        h = np.r_[h1, h2]
-        # A
-        A = train_label.reshape(1, train_num)
-        # b
-        b = np.zeros((1, 1))
+        train_samples = train_data.shape[0]
 
-        print("init OK for 1")
+        p = np.zeros((train_samples, train_samples)).astype(np.double)
+        for i in range(train_samples):
+            for j in range(train_samples):
+                p[i][j] = self.KERNEL(train_data[i], train_data[j], self.kernel) * train_label[i] * train_label[j]
 
-        P = P.astype(np.double)
-        q = q.astype(np.double)
-        G = G.astype(np.double)
-        h = h.astype(np.double)
-        A = A.astype(np.double)
-        b = b.astype(np.double)
-        P_1 = cvxopt.matrix(P)
-        q_1 = cvxopt.matrix(q)
-        G_1 = cvxopt.matrix(G)
-        h_1 = cvxopt.matrix(h)
-        A_1 = cvxopt.matrix(A)
-        b_1 = cvxopt.matrix(b)
-        sol = cvxopt.solvers.qp(P_1, q_1, G_1, h_1, A_1, b_1)
-        sol_x = sol['x']
-        print("get x 2")
-        alpha = np.array(sol_x)
+        q = - np.ones((train_samples, 1)).astype(np.double)
+
+        G1 = np.eye(train_samples, dtype=int)
+        G2 = - np.eye(train_samples, dtype=int)
+        G = np.r_[G1, G2].astype(np.double)
+
+        h1 = np.zeros((train_samples, 1))
+        h1[:] = self.C
+        # for i in range(train_samples):
+        #     h1[i] = self.C
+        h2 = np.zeros((train_samples, 1))
+        h = np.r_[h1, h2].astype(np.double)
+
+        A = train_label.reshape(1, -1).astype(np.double)
+
+        b = np.zeros((1, 1)).astype(np.double)
+
+        p_m = cvxopt.matrix(p)
+        q_m = cvxopt.matrix(q)
+        G_m = cvxopt.matrix(G)
+        h_m = cvxopt.matrix(h)
+        A_m = cvxopt.matrix(A)
+        b_m = cvxopt.matrix(b)
+        sol = cvxopt.solvers.qp(p_m, q_m, G_m, h_m, A_m, b_m)
+
+        alpha = np.array(sol['x'])
+
+        print("alpha:", alpha)
 
         indices = np.where(alpha > self.Epsilon)[0]
         bias = np.mean(
             [train_label[i] - sum(
                 [train_label[i] * alpha[i] * self.KERNEL(x, train_data[i], self.kernel) for x in train_data[indices]])
              for i in indices])
-        test_num = test_data.shape[0]
+
         predictions = []
-        for j in range(test_num):
+        for j in range(test_data.shape[0]):
             prediction = bias + sum(
                 [train_label[i] * alpha[i] * self.KERNEL(test_data[j], train_data[i], self.kernel) for i in indices])
             predictions.append(prediction)
-        prediction = np.array(predictions).reshape(test_num, 1)
+        prediction = np.array(predictions).reshape(-1, 1)
+
+        print("prediction:", prediction)
+
         return prediction
 
 
