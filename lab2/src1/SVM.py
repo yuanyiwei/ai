@@ -55,7 +55,7 @@ class SupportVectorMachine:
         '''
         train_samples = train_data.shape[0]
 
-        p = np.zeros((train_samples, train_samples)).astype(np.double)
+        p = np.zeros((train_samples, train_samples))
         for i in range(train_samples):
             for j in range(train_samples):
                 p[i][j] = self.KERNEL(train_data[i], train_data[j], self.kernel) * train_label[i] * train_label[j]
@@ -86,22 +86,43 @@ class SupportVectorMachine:
 
         print("alpha:", alpha)
 
+        # means = 0
+        # for i in range(train_samples):
+        #     if alpha[i] < self.Epsilon:
+        #         alpha[i] = 0
+        # for i in range(train_samples):
+        #     if alpha[i] > 0 and alpha[i] < self.C:
+        #         means = train_label[i]
+        #         xi = train_data[i].reshape(-1, 1)
+        #         for j in range(train_samples):
+        #             means = means - alpha[j] * train_label[j] * (self.KERNEL(train_data[j], xi))
+        #         break
+        #
+        # test_samples = test_data.shape[0]
+        # pred = np.zeros((test_samples, 1), dtype=float)
+        # for i in range(test_samples):
+        #     pred_i = means
+        #     xi = test_data[i].reshape(-1, 1)
+        #     for j in range(train_samples):
+        #         pred_i = pred_i + alpha[j] * train_label[j] * (self.KERNEL(train_data[j], xi))
+        #     pred[i][0] = pred_i
+        # return pred
+
         indices = np.where(alpha > self.Epsilon)[0]
         bias = np.mean(
             [train_label[i] - sum(
                 [train_label[i] * alpha[i] * self.KERNEL(x, train_data[i], self.kernel) for x in train_data[indices]])
              for i in indices])
 
-        predictions = []
+        pre = []
         for j in range(test_data.shape[0]):
             prediction = bias + sum(
                 [train_label[i] * alpha[i] * self.KERNEL(test_data[j], train_data[i], self.kernel) for i in indices])
-            predictions.append(prediction)
-        prediction = np.array(predictions).reshape(-1, 1)
+            pre.append(prediction)
+        pre_out = np.array(pre).reshape(-1, 1)
 
-        print("prediction:", prediction)
-
-        return prediction
+        print("prediction:", pre_out)
+        return pre_out
 
 
 def main():
