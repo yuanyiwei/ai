@@ -5,16 +5,16 @@ from random import randint
 
 class MLP_munual:
     def __init__(self,lr,epoch):
-        self.y1 = np.zeros((5, 1), dtype=float) #input
-        self.w2 = np.zeros((4, 5), dtype=float)
-        self.b2 = np.zeros((4, 1), dtype=float)
-        self.y2 = np.zeros((4, 1), dtype=float)
-        self.w3 = np.zeros((4, 4), dtype=float)
-        self.b3 = np.zeros((4, 1), dtype=float)
-        self.y3 = np.zeros((4, 1), dtype=float)
-        self.w4 = np.zeros((3, 4), dtype=float)
-        self.b4 = np.zeros((3, 1), dtype=float)
-        self.y4 = np.zeros((3, 1), dtype=float) #output
+        self.y1 = np.zeros((5, 1)) #input
+        self.w2 = np.zeros((4, 5))
+        self.b2 = np.zeros((4, 1))
+        self.y2 = np.zeros((4, 1))
+        self.w3 = np.zeros((4, 4))
+        self.b3 = np.zeros((4, 1))
+        self.y3 = np.zeros((4, 1))
+        self.w4 = np.zeros((3, 4))
+        self.b4 = np.zeros((3, 1))
+        self.y4 = np.zeros((3, 1)) #output
         self.lr = lr
         self.epoch = epoch
 

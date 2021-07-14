@@ -55,25 +55,21 @@ class SupportVectorMachine:
         '''
         train_samples = train_data.shape[0]
 
-        p = np.zeros((train_samples, train_samples))
+        p = np.zeros([train_samples, train_samples])
         for i in range(train_samples):
             for j in range(train_samples):
                 p[i][j] = self.KERNEL(train_data[i], train_data[j], self.kernel) * train_label[i] * train_label[j]
 
-        q = - np.ones([train_samples, 1]).astype(np.double)
-
+        q = - np.ones([train_samples, 1])
         G1 = np.eye(train_samples)
         G2 = - np.eye(train_samples)
         G = np.r_[G1, G2].astype(np.double)
-
         h1 = np.zeros([train_samples, 1])
         h2 = np.zeros([train_samples, 1])
         h1[:] = self.C
-        h = np.r_[h1, h2].astype(np.double)
-
+        h = np.r_[h1, h2]
         A = train_label.reshape(1, -1).astype(np.double)
-
-        b = np.zeros([1, 1]).astype(np.double)
+        b = np.zeros([1, 1])
 
         p_m = cvxopt.matrix(p)
         q_m = cvxopt.matrix(q)
@@ -84,44 +80,21 @@ class SupportVectorMachine:
         sol = cvxopt.solvers.qp(p_m, q_m, G_m, h_m, A_m, b_m)
         alpha = np.array(sol['x'])
 
-        print("alpha:", alpha)
-
-        # means = 0
-        # for i in range(train_samples):
-        #     if alpha[i] < self.Epsilon:
-        #         alpha[i] = 0
-        # for i in range(train_samples):
-        #     if alpha[i] > 0 and alpha[i] < self.C:
-        #         means = train_label[i]
-        #         xi = train_data[i].reshape(-1, 1)
-        #         for j in range(train_samples):
-        #             means = means - alpha[j] * train_label[j] * (self.KERNEL(train_data[j], xi))
-        #         break
-        #
-        # test_samples = test_data.shape[0]
-        # pred = np.zeros((test_samples, 1), dtype=float)
-        # for i in range(test_samples):
-        #     pred_i = means
-        #     xi = test_data[i].reshape(-1, 1)
-        #     for j in range(train_samples):
-        #         pred_i = pred_i + alpha[j] * train_label[j] * (self.KERNEL(train_data[j], xi))
-        #     pred[i][0] = pred_i
-        # return pred
-
-        indices = np.where(alpha > self.Epsilon)[0]
-        bias = np.mean(
-            [train_label[i] - sum(
-                [train_label[i] * alpha[i] * self.KERNEL(x, train_data[i], self.kernel) for x in train_data[indices]])
-             for i in indices])
+        posi = np.where(alpha > self.Epsilon)[0]
+        off_train_label = []
+        for i in posi:
+            off_train_label.append(train_label[i] - sum(
+                [train_label[i] * alpha[i] * self.KERNEL(train_d, train_data[i], self.kernel) for train_d in
+                 train_data[posi]]))
+        off_label = np.mean(np.array(off_train_label))
 
         pre = []
-        for j in range(test_data.shape[0]):
-            prediction = bias + sum(
-                [train_label[i] * alpha[i] * self.KERNEL(test_data[j], train_data[i], self.kernel) for i in indices])
+        for test_d in test_data:
+            prediction = off_label + sum(
+                [train_label[i] * alpha[i] * self.KERNEL(test_d, train_data[i], self.kernel) for i in posi])
             pre.append(prediction)
         pre_out = np.array(pre).reshape(-1, 1)
 
-        print("prediction:", pre_out)
         return pre_out
 
 
