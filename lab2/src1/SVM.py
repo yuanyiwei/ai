@@ -55,21 +55,17 @@ class SupportVectorMachine:
         '''
         train_samples = train_data.shape[0]
 
-        p = np.zeros([train_samples, train_samples])
+        k = np.zeros([train_samples, train_samples])
         for i in range(train_samples):
             for j in range(train_samples):
-                p[i][j] = self.KERNEL(train_data[i], train_data[j], self.kernel) * train_label[i] * train_label[j]
+                k[i][j] = self.KERNEL(train_data[i], train_data[j], self.kernel)
 
+        p = np.outer(train_label, train_label) * k
         q = - np.ones([train_samples, 1])
-        G1 = np.eye(train_samples)
-        G2 = - np.eye(train_samples)
-        G = np.r_[G1, G2].astype(np.double)
-        h1 = np.zeros([train_samples, 1])
-        h2 = np.zeros([train_samples, 1])
-        h1[:] = self.C
-        h = np.r_[h1, h2]
+        G = np.vstack((np.diag(np.ones(train_samples)), np.diag(- np.ones(train_samples))))
+        h = np.vstack((np.ones([train_samples, 1]) * self.C, np.zeros([train_samples, 1])))
         A = train_label.reshape(1, -1).astype(np.double)
-        b = np.zeros([1, 1])
+        b = 0.0
 
         p_m = cvxopt.matrix(p)
         q_m = cvxopt.matrix(q)
