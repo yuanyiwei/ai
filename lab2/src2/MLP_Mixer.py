@@ -57,6 +57,7 @@ class MLPMixer(nn.Module):
         mlp1_data = self.pre_patch_fc(data)
         mlp1_data = self.mlp(mlp1_data)
         mlp1_data = self.layernorm(mlp1_data)
+        # self.skip_connection = ?
 
         avg = torch.mean(mlp1_data, dim=1)
         mlp2_data = self.fc(avg)
@@ -71,10 +72,10 @@ def train(model, train_loader, optimizer, n_epochs, criterion):
             data, target = data.to(device), target.to(device)
             ########################################################################
             # 计算loss并进行优化
-            pred = model(data)
-            loss = criterion(pred, target)
-
+            pre = model(data)
             optimizer.zero_grad()
+
+            loss = criterion(pre, target)
             loss.backward()
             optimizer.step()
             ########################################################################
@@ -97,7 +98,7 @@ def test(model, test_loader, criterion):
             num_correct += (pred.argmax(1) == target).type(torch.float).sum().item()
 
         test_loss /= len(test_loader)
-        accuracy = num_correct / len(test_loader.dataset)
+        accuracy = num_correct / len(test_loader)
         ########################################################################
         print("Test set: Average loss: {:.4f}\t Acc {:.2f}".format(test_loss.item(), accuracy))
 
