@@ -12,6 +12,7 @@ class Mixer_Layer(nn.Module):
         ########################################################################
         #这里需要写Mixer_Layer（layernorm，mlp1，mlp2，skip_connection）
         
+        self.layernorm = nn.LayerNorm(hidden_dim)
         ########################################################################
 
     def forward(self, x):
@@ -85,7 +86,7 @@ if __name__ == '__main__':
 
     
     ########################################################################
-    model = MLPMixer(patch_size = , hidden_dim = , depth = ).to(device) # 参数自己设定，其中depth必须大于1
+    model = MLPMixer(patch_size = 7, hidden_dim = 512, depth = 12).to(device) # 参数自己设定，其中depth必须大于1
     # 这里需要调用optimizer，criterion(交叉熵)
 
     ########################################################################
