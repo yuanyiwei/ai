@@ -93,9 +93,10 @@ def test(model, test_loader, criterion):
             data, target = data.to(device), target.to(device)
             ########################################################################
             # 需要计算测试集的loss和accuracy
-            pred = model(data)
-            test_loss += criterion(pred, target).item()
-            num_correct += (pred.argmax(1) == target).type(torch.float).sum().item()
+            pre = model(data)
+
+            test_loss += criterion(pre, target).item()
+            num_correct += (pre.argmax(1) == target).type(torch.float).sum().item()
 
         test_loss /= len(test_loader)
         accuracy = num_correct / len(test_loader)
