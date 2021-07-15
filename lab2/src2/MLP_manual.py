@@ -1,110 +1,92 @@
 import numpy as np
+from random import randint
 import math
 import matplotlib.pyplot as plt
-from random import randint
 
 
-class MLP_munual:
+def sigmoid(v):
+    for i in range(v.shape[0]):
+        v[i][0] = 1 / (1 + math.exp(-v[i][0]))
+    return v
+
+
+class MLP_manual:
     def __init__(self, lr, epoch):
-        self.y1 = np.zeros([5, 1])  # input
-        self.w2 = np.zeros([4, 5])
-        self.b2 = np.zeros([4, 1])
-        self.y2 = np.zeros([4, 1])
-        self.w3 = np.zeros([4, 4])
-        self.b3 = np.zeros([4, 1])
-        self.y3 = np.zeros([4, 1])
-        self.w4 = np.zeros([3, 4])
-        self.b4 = np.zeros([3, 1])
-        self.y4 = np.zeros([3, 1])  # output
         self.lr = lr
         self.epoch = epoch
 
-    def sigmiod(self, mat):
-        e = math.e
+        self.y1 = np.zeros([5, 1])
+        self.y2 = np.zeros([4, 1])
+        self.y3 = np.zeros([4, 1])
+        self.y4 = np.zeros([3, 1])
 
-        for i in range(mat.shape[0]):
-            mat[i][0] = 1 / (1 + e ** (-mat[i][0]))
+        self.w1 = np.zeros([4, 5])
+        self.w2 = np.zeros([4, 4])
+        self.w3 = np.zeros([3, 4])
 
-        return mat
+        self.b1 = np.zeros([4, 1])
+        self.b2 = np.zeros([4, 1])
+        self.b3 = np.zeros([3, 1])
 
-    def MLP(self, train_data, train_label):
+    def train_pass_layer(self, train_d):
+        self.y1 = train_d
+        self.y2 = sigmoid(np.dot(self.w1, self.y1) + self.b1)
+        self.y3 = sigmoid(np.dot(self.w2, self.y2) + self.b2)
+        self.y4 = sigmoid(np.dot(self.w3, self.y3) + self.b3)
 
-        label = np.zeros((train_label.shape[0], 3), dtype=float)
-        for i in range(train_label.shape[0]):
-            for j in range(3):
-                label[i][j] = 0
-            label[i][int(train_label[i][0]) - 1] = 1
+    def hidden(self, w_h, y_h, y_l, w_l, b_l, yita_l, yita_h):
+        for i in range(yita_l.shape[0]):
+            for j in range(yita_h.shape[0]):
+                yita_l[i][0] += yita_h[j][0] * w_h[j][i]
+            yita_l[i][0] *= y_h[i][0] * (1 - y_h[i][0])
+        return w_l - self.lr * np.dot(yita_l, y_l.reshape(1, -1)), b_l - self.lr * yita_l, yita_l
 
-        loss_array = np.zeros(self.epoch, dtype=float)
+    def train(self, train_data, train_label):
+        train_samples = train_data.shape[0]
+        label = np.zeros([train_samples, 3], dtype=int)
+        for i in range(train_samples):
+            label[i][train_label[i][0] - 1] = 1
 
-        epoch = 0
-        while epoch < self.epoch:
+        losses = []
 
-            for i in range(train_data.shape[0]):
+        for _ in range(self.epoch):
+            for sample in range(train_samples):
+                self.train_pass_layer(train_data[sample].reshape(-1, 1))
 
-                self.y1 = train_data[i].reshape((-1, 1))
-                self.y2 = self.sigmiod(np.dot(self.w2, self.y1) + self.b2)
-                self.y3 = self.sigmiod(np.dot(self.w3, self.y2) + self.b3)
-                self.y4 = self.sigmiod(np.dot(self.w4, self.y3) + self.b4)
+                yita1 = np.zeros([4, 1])
+                yita2 = np.zeros([4, 1])
+                yita3 = np.zeros([3, 1])
 
-                eta2 = np.zeros((4, 1), dtype=float)
-                eta3 = np.zeros((4, 1), dtype=float)
-                eta4 = np.zeros((3, 1), dtype=float)
-
-                for j in range(3):
-                    eta4[j][0] = label[i][j] * (self.y4[j][0] - 1)
-
-                self.w4 -= self.lr * np.dot(eta4, (self.y3).reshape(1, -1))
-                self.b4 -= self.lr * eta4
-
-                for j in range(4):
-                    for k in range(3):
-                        eta3[j][0] += eta4[k][0] * self.w4[k][j]
-                    eta3[j][0] *= self.y3[j][0] * (1 - self.y3[j][0])
-
-                self.w3 -= self.lr * np.dot(eta3, (self.y2).reshape(1, -1))
-                self.b3 -= self.lr * eta3
-
-                for j in range(4):
-                    for k in range(4):
-                        eta2[j][0] += eta3[k][0] * self.w3[k][j]
-                    eta2[j][0] *= self.y2[j][0] * (1 - self.y2[j][0])
-
-                self.w2 -= self.lr * np.dot(eta2, (self.y1).reshape(1, -1))
-                self.b2 -= self.lr * eta2
-
-            # calc loss
+                for i in range(yita3.shape[0]):
+                    yita3[i][0] = label[sample][i] * (self.y4[i][0] - 1)
+                self.w3 -= self.lr * np.dot(yita3, self.y3.reshape(1, -1))
+                self.b3 -= self.lr * yita3
+                self.w2, self.b2, yita2 = self.hidden(self.w3, self.y3, self.y2, self.w2, self.b2, yita2, yita3)
+                self.w1, self.b1, yita1 = self.hidden(self.w2, self.y2, self.y1, self.w1, self.b1, yita1, yita2)
 
             loss = 0
-
-            for i in range(train_data.shape[0]):
-
-                self.y1 = train_data[i].reshape((-1, 1))
-                self.y2 = self.sigmiod(np.dot(self.w2, self.y1) + self.b2)
-                self.y3 = self.sigmiod(np.dot(self.w3, self.y2) + self.b3)
-                self.y4 = self.sigmiod(np.dot(self.w4, self.y3) + self.b4)
-
-                for j in range(3):
-                    loss -= label[i][j] * math.log(self.y4[j][0], math.e)
-
-            loss_array[epoch] = loss
-            epoch += 1
-
-        plt.plot(loss_array)
-        plt.show()
+            for sample in range(train_samples):
+                self.train_pass_layer(train_data[sample].reshape(-1, 1))
+                for i in range(3):
+                    if label[sample][i] == 1:
+                        loss -= math.log(self.y4[i][0], math.e)
+            losses.append(loss)
+        return np.array(losses)
 
 
 def main():
-    train_data = np.random.randn(100, 5)
-    train_label = np.zeros((100, 1), dtype=int)
-    for i in range(100):
-        train_label[i][0] = randint(1, 3)
+    train_label = []
+    train_sample_size = 100
+    lr = 0.05
+    epoch = 500
+    train_data = np.random.randn(train_sample_size, 5)
+    for i in range(train_sample_size):
+        train_label.append(randint(1, 3))
 
-    lr = 0.01
-    epoch = 100
-
-    mlp_m = MLP_munual(lr, epoch)
-    mlp_m.MLP(train_data, train_label)
+    mlp = MLP_manual(lr, epoch)
+    losses = mlp.train(train_data, np.array(train_label).reshape(-1, 1))
+    plt.plot(losses)
+    plt.show()
 
 
 main()
