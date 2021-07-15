@@ -108,7 +108,7 @@ def main():
     # kernel为核函数类型，可能的类型有'Linear'/'Poly'/'Gauss'
     # C为软间隔参数；
     # Epsilon为拉格朗日乘子阈值，低于此阈值时将该乘子设置为0
-    kernel = 'Linear'
+    kernel = 'Gauss'
     C = 1
     Epsilon = 10e-5
     # 生成SVM分类器
